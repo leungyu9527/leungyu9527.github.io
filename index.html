@@ -1714,7 +1714,7 @@
             </div>
             <div class="card">
                 <div class="weather-search">
-                    <input type="text" id="weather-city" placeholder="输入城市名称，如：北京、上海、广州...">
+                    <input type="text" id="weather-city" placeholder="输入城市或省份名称，如：北京、上海、广东..." onkeydown="if(event.key==='Enter')searchWeather()">
                     <button class="btn btn-primary" onclick="searchWeather()">🔍 查询</button>
                     <button class="btn btn-outline" onclick="useMyLocation()">📍 我的定位</button>
                 </div>
