@@ -17,7 +17,7 @@ jobs:
 
       - name: Fetch hot search data
         run: |
-          curl -s -L "https://newshub.shenzjd.com/api/v1/batch?sources=weibo,zhihu,baidu,bilibili,douyin,toutiao,ithome,thepaper,hupu,tieba,sspai,github&limit=30" -o hot-data.json
+          curl -s -L "https://newshub.shenzjd.com/api/v1/batch?sources=weibo,zhihu,wallstreetcn,bilibili,douyin,toutiao,ithome,thepaper,coolapk,tieba,juejin,github&limit=30" -o hot-data.json
           echo "Fetched data size: $(wc -c < hot-data.json) bytes"
           if [ ! -s hot-data.json ]; then
             echo "Error: hot-data.json is empty, aborting"
