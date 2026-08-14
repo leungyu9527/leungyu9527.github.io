@@ -2711,26 +2711,63 @@
         `;
 
         try {
-            const url = `https://newshub.shenzjd.com/api/v1/batch?sources=${currentPlatform}&limit=30${force ? '&force=1' : ''}`;
-            const res = await fetch(url);
-            const json = await res.json();
+            let json = null;
+            let dataSource = '';
 
-            const result = json.results?.find(r => r.id === currentPlatform);
-            if (result && result.success && result.data) {
-                hotDataCache[currentPlatform] = result.data;
-                const now = new Date();
-                document.getElementById('hot-update-time').textContent =
-                    `更新于 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+            // 方案1: 从本地缓存加载（GitHub Pages 同源，无 CORS 问题）
+            try {
+                const cacheRes = await fetch('hot-data.json');
+                if (cacheRes.ok) {
+                    json = await cacheRes.json();
+                    dataSource = 'cache';
+                }
+            } catch(e) { /* 本地缓存不存在或加载失败，继续尝试在线API */ }
+
+            // 方案2: 如果本地缓存不可用，尝试在线 API（本地开发环境可用）
+            if (!json || force) {
+                try {
+                    const url = `https://newshub.shenzjd.com/api/v1/batch?sources=${currentPlatform}&limit=30${force ? '&force=1' : ''}`;
+                    const liveRes = await fetch(url);
+                    if (liveRes.ok) {
+                        json = await liveRes.json();
+                        dataSource = 'live';
+                    }
+                } catch(e) { /* 在线 API CORS 限制或网络失败 */ }
+            }
+
+            if (json) {
+                // 预加载所有平台数据到缓存
+                if (json.results) {
+                    json.results.forEach(r => {
+                        if (r.success && r.data) {
+                            hotDataCache[r.id] = r.data;
+                        }
+                    });
+                }
+
+                const result = json.results?.find(r => r.id === currentPlatform);
+                if (result && result.success && result.data) {
+                    hotDataCache[currentPlatform] = result.data;
+                }
+
+                // 显示更新时间
+                if (json.updatedAt) {
+                    document.getElementById('hot-update-time').textContent = `数据更新: ${json.updatedAt}`;
+                } else {
+                    const now = new Date();
+                    document.getElementById('hot-update-time').textContent =
+                        `更新于 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                }
                 renderHotList();
             } else {
-                hotDataCache[currentPlatform] = [];
-                renderHotList();
+                throw new Error('No data source available');
             }
         } catch (err) {
             document.getElementById('hot-content').innerHTML = `
                 <div class="empty-state">
                     <div class="icon">⚠️</div>
-                    <p>获取热搜失败，请检查网络后重试</p>
+                    <p>获取热搜失败</p>
+                    <p style="font-size:13px;color:var(--text-muted);margin-top:8px;">在线版本数据每30分钟自动更新，请稍后刷新重试</p>
                     <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="loadHotSearch(true)">重新加载</button>
                 </div>
             `;
