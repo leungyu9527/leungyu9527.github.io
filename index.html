@@ -1,0 +1,2895 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的个人管理台</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --primary-light: #a29bfe;
+            --primary-dark: #5649c0;
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #2d3436;
+            --text-light: #636e72;
+            --text-muted: #b2bec3;
+            --success: #00b894;
+            --warning: #fdcb6e;
+            --danger: #e17055;
+            --info: #0984e3;
+            --border: #dfe6e9;
+            --shadow: 0 2px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --sidebar-w: 240px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ============ Sidebar ============ */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+            color: #fff;
+            padding: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            box-shadow: 4px 0 24px rgba(108, 92, 231, 0.15);
+        }
+
+        .sidebar-header {
+            padding: 28px 24px 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .sidebar-header .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .nav-menu {
+            flex: 1;
+            padding: 16px 0;
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 15px;
+            color: rgba(255,255,255,0.75);
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #fff;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .nav-item .icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 16px 24px;
+            font-size: 12px;
+            opacity: 0.5;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.12);
+        }
+
+        /* ============ Main Content ============ */
+        .main {
+            flex: 1;
+            margin-left: var(--sidebar-w);
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-header h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .page-header p {
+            color: var(--text-light);
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        /* ============ Cards ============ */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ============ Grid ============ */
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* ============ Dashboard Stats ============ */
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .stat-info .label {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .stat-info .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+
+        /* ============ Forms ============ */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-light);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text);
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+        }
+
+        /* ============ Buttons ============ */
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.35);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover { opacity: 0.9; }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text-light);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+
+        /* ============ Tables ============ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--text-light);
+            border-bottom: 2px solid var(--border);
+            font-weight: 500;
+        }
+
+        td {
+            padding: 12px 16px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tr:hover td {
+            background: #fafbfc;
+        }
+
+        /* ============ Tags / Badges ============ */
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-income { background: #d4edda; color: #155724; }
+        .badge-expense { background: #f8d7da; color: #721c24; }
+        .badge-danger { background: #fde8e8; color: #c0392b; }
+        .badge-warning { background: #fef3cd; color: #856404; }
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+
+        /* ============ Summary Row ============ */
+        .summary-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .summary-box .label {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .summary-box .value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* ============ Checkbox ============ */
+        .checkbox-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrap input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            transition: all 0.2s;
+        }
+
+        .task-item:hover {
+            background: #f0f1f3;
+        }
+
+        .task-item.done .task-text {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .task-priority {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .priority-high { background: #fde8e8; color: #e74c3c; }
+        .priority-medium { background: #fef3cd; color: #f39c12; }
+        .priority-low { background: #d4edda; color: #27ae60; }
+
+        /* ============ Pomodoro Timer ============ */
+        .pomodoro-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .timer-display {
+            font-size: 72px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: var(--primary);
+            margin: 20px 0;
+        }
+
+        .timer-mode {
+            font-size: 16px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .timer-progress {
+            width: 200px;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            margin: 16px auto;
+            overflow: hidden;
+        }
+
+        .timer-progress-bar {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            width: 100%;
+        }
+
+        /* ============ Weather ============ */
+        .weather-search {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .weather-search input {
+            flex: 1;
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--radius);
+            padding: 32px;
+            color: #fff;
+            text-align: center;
+        }
+
+        .weather-card .city {
+            font-size: 22px;
+            font-weight: 500;
+        }
+
+        .weather-card .temp {
+            font-size: 64px;
+            font-weight: 300;
+            margin: 16px 0;
+        }
+
+        .weather-card .desc {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .weather-details {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+        }
+
+        .weather-detail {
+            text-align: center;
+        }
+
+        .weather-detail .icon {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        .weather-detail .label {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        .weather-detail .value {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .weather-forecast {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .forecast-day {
+            background: var(--card-bg);
+            border-radius: var(--radius-sm);
+            padding: 16px 8px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .forecast-day .day {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .forecast-day .icon {
+            font-size: 28px;
+            margin: 8px 0;
+        }
+
+        .forecast-day .temp {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .forecast-day .temp-low {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* ============ MBTI ============ */
+        .mbti-intro {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .mbti-intro .icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+        }
+
+        .mbti-intro h3 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .mbti-intro p {
+            color: var(--text-light);
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .mbti-question {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .mbti-question .q-num {
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .mbti-question .q-text {
+            font-size: 20px;
+            font-weight: 500;
+            margin: 16px 0;
+            line-height: 1.6;
+        }
+
+        .mbti-choices {
+            display: flex;
+            gap: 16px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .mbti-choice {
+            flex: 1;
+            padding: 24px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .mbti-choice:hover {
+            border-color: var(--primary-light);
+            background: #f8f7ff;
+        }
+
+        .mbti-choice.selected {
+            border-color: var(--primary);
+            background: #f0effa;
+        }
+
+        .mbti-progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+
+        .mbti-progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .mbti-result {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .mbti-type {
+            font-size: 72px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 16px 0;
+        }
+
+        .mbti-type-name {
+            font-size: 24px;
+            font-weight: 500;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .mbti-type-desc {
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 16px auto;
+            line-height: 1.8;
+            text-align: left;
+        }
+
+        .mbti-traits {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .mbti-dimension {
+            margin: 20px 0;
+        }
+
+        .mbti-dimension .dim-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+
+        .mbti-dimension .dim-bar {
+            height: 10px;
+            background: var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .mbti-dimension .dim-fill {
+            height: 100%;
+            border-radius: 5px;
+            transition: width 0.6s ease;
+        }
+
+        /* ============ Expiration Items ============ */
+        .expiry-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            transition: all 0.2s;
+        }
+
+        .expiry-item:hover {
+            background: #f0f1f3;
+        }
+
+        .expiry-item .item-name {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .expiry-item .item-cat {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .expiry-item .item-date {
+            font-size: 13px;
+            color: var(--text-light);
+            white-space: nowrap;
+        }
+
+        .expiry-item .item-countdown {
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* ============ Empty State ============ */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* ============ Toast ============ */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--text);
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            font-size: 14px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.35s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+
+        /* ============ Responsive ============ */
+        @media (max-width: 900px) {
+            .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .summary-row { flex-direction: column; }
+            .mbti-choices { flex-direction: column; }
+            .weather-forecast { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .sidebar { width: 64px; }
+            .sidebar-header h1, .sidebar-header p, .nav-item span:not(.icon), .sidebar-footer { display: none; }
+            .nav-item { justify-content: center; padding: 14px; }
+            .main { margin-left: 64px; padding: 16px; }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; }
+            .weather-forecast { grid-template-columns: repeat(2, 1fr); }
+            .timer-display { font-size: 56px; }
+        }
+
+        /* ============ Scrollbar ============ */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+
+        .hidden { display: none !important; }
+
+        /* ============ Photo Upload ============ */
+        .photo-upload-area {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .photo-upload-area:hover {
+            border-color: var(--primary-light);
+            background: #f8f7ff;
+        }
+
+        .photo-upload-area.has-photo {
+            border-style: solid;
+            border-color: var(--success);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .photo-upload-area .upload-icon {
+            font-size: 36px;
+            opacity: 0.5;
+        }
+
+        .photo-upload-area .upload-text {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .photo-preview {
+            width: 100%;
+            max-height: 160px;
+            object-fit: cover;
+            border-radius: var(--radius-sm);
+        }
+
+        .photo-clear-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .photo-clear-btn:hover {
+            background: var(--danger);
+        }
+
+        /* ============ Item Thumbnail ============ */
+        .item-photo {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-sm);
+            object-fit: cover;
+            cursor: pointer;
+            flex-shrink: 0;
+            border: 2px solid var(--border);
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .item-photo:hover {
+            transform: scale(1.08);
+            border-color: var(--primary-light);
+        }
+
+        .item-photo-placeholder {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-sm);
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+            border: 2px solid var(--border);
+        }
+
+        /* ============ Image Lightbox ============ */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            cursor: zoom-out;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 8px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .lightbox-close:hover {
+            opacity: 1;
+        }
+
+        /* ============ Login Screen ============ */
+        .login-overlay {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .login-box {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 48px 40px;
+            width: 400px;
+            max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .login-box .login-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .login-box h2 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .login-box .subtitle {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 28px;
+        }
+
+        .login-box input {
+            text-align: center;
+            font-size: 16px;
+            letter-spacing: 2px;
+        }
+
+        .login-box .btn {
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            font-size: 15px;
+            margin-top: 8px;
+        }
+
+        .login-error {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 18px;
+        }
+
+        .login-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .login-toggle {
+            font-size: 13px;
+            color: var(--primary);
+            cursor: pointer;
+            margin-top: 16px;
+            display: inline-block;
+        }
+
+        .login-toggle:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        /* ============ Hot Search ============ */
+        .hot-platforms {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .platform-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: #fff;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .platform-btn:hover {
+            border-color: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .platform-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+        .platform-btn .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .hot-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            gap: 12px;
+        }
+
+        .hot-toolbar input {
+            max-width: 300px;
+        }
+
+        .hot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .hot-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .hot-item:hover {
+            background: #f8f7ff;
+            transform: translateX(4px);
+        }
+
+        .hot-rank {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+            background: var(--bg);
+            color: var(--text-light);
+        }
+
+        .hot-rank.top1 { background: #ff4757; color: #fff; }
+        .hot-rank.top2 { background: #ff6b81; color: #fff; }
+        .hot-rank.top3 { background: #ffa502; color: #fff; }
+
+        .hot-title {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .hot-info {
+            font-size: 12px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            flex-shrink: 0;
+            background: var(--bg);
+            padding: 3px 10px;
+            border-radius: 12px;
+        }
+
+        .hot-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .hot-tag.hot { background: #fff0f0; color: #ff4757; }
+        .hot-tag.new { background: #f0fff4; color: #00b894; }
+        .hot-tag.boil { background: #fff8e1; color: #ffa502; }
+
+        .hot-loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .hot-loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hot-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .hot-refresh-btn {
+            padding: 6px 14px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <div class="login-icon">🔐</div>
+            <!-- 登录模式 -->
+            <div id="login-mode">
+                <h2>欢迎回来</h2>
+                <p class="subtitle">请输入密码进入个人管理台</p>
+                <input type="password" id="login-password" placeholder="输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+                <div class="login-error" id="login-error"></div>
+                <button class="btn btn-primary" onclick="doLogin()">进 入</button>
+                <div class="login-hint">数据仅保存在本地浏览器中<br>忘记密码？清除浏览器 localStorage 即可重置</div>
+            </div>
+            <!-- 首次设置密码模式 -->
+            <div id="setup-mode" class="hidden">
+                <h2>设置访问密码</h2>
+                <p class="subtitle">首次使用，请设置你的专属密码</p>
+                <input type="password" id="setup-password" placeholder="设置密码（至少4位）" onkeydown="if(event.key==='Enter')document.getElementById('setup-confirm').focus()">
+                <div style="height:12px;"></div>
+                <input type="password" id="setup-confirm" placeholder="确认密码" onkeydown="if(event.key==='Enter')doSetup()">
+                <div class="login-error" id="setup-error"></div>
+                <button class="btn btn-primary" onclick="doSetup()">确认设置</button>
+                <div class="login-hint">请牢记你的密码，设置后每次进入都需要输入</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="avatar">🏠</div>
+            <h1>个人管理台</h1>
+            <p>My Dashboard</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" data-page="dashboard">
+                <span class="icon">📊</span><span>仪表盘</span>
+            </li>
+            <li class="nav-item" data-page="accounting">
+                <span class="icon">💰</span><span>记账管理</span>
+            </li>
+            <li class="nav-item" data-page="expiry">
+                <span class="icon">📅</span><span>过期管理</span>
+            </li>
+            <li class="nav-item" data-page="efficiency">
+                <span class="icon">⚡</span><span>效能管理</span>
+            </li>
+            <li class="nav-item" data-page="weather">
+                <span class="icon">🌤️</span><span>天气查询</span>
+            </li>
+            <li class="nav-item" data-page="mbti">
+                <span class="icon">🧠</span><span>MBTI测试</span>
+            </li>
+            <li class="nav-item" data-page="hotsearch">
+                <span class="icon">🔥</span><span>热搜速览</span>
+            </li>
+        </ul>
+        <div class="sidebar-footer">
+            <button class="btn btn-outline btn-sm" onclick="doLogout()" style="color:#fff;border-color:rgba(255,255,255,0.3);width:100%;margin-bottom:8px;">🔒 退出登录</button>
+            <p>© 2026 个人管理台</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- ============ Dashboard ============ -->
+        <div class="page active" id="page-dashboard">
+            <div class="page-header">
+                <h2>仪表盘</h2>
+                <p>欢迎回来，这是你今天的概览</p>
+            </div>
+            <div class="grid grid-4">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#e8f5e9;color:#00b894;">💰</div>
+                    <div class="stat-info">
+                        <div class="label">本月结余</div>
+                        <div class="value" id="dash-balance">¥0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#fff3e0;color:#e17055;">📅</div>
+                    <div class="stat-info">
+                        <div class="label">即将过期</div>
+                        <div class="value" id="dash-expiring">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#e3f2fd;color:#0984e3;">⚡</div>
+                    <div class="stat-info">
+                        <div class="label">待办任务</div>
+                        <div class="value" id="dash-tasks">0</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#f3e5f5;color:#6C5CE7;">🍅</div>
+                    <div class="stat-info">
+                        <div class="label">今日番茄钟</div>
+                        <div class="value" id="dash-pomodoros">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-2" style="margin-top:20px;">
+                <div class="card">
+                    <div class="card-title">⚡ 快捷操作</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                        <button class="btn btn-primary" onclick="navigate('accounting')">➕ 记一笔账</button>
+                        <button class="btn btn-success" onclick="navigate('efficiency')">📝 新建任务</button>
+                        <button class="btn btn-outline" onclick="navigate('expiry')">📅 添加物品</button>
+                        <button class="btn btn-outline" onclick="navigate('weather')">🌤️ 查天气</button>
+                        <button class="btn btn-outline" onclick="navigate('mbti')">🧠 MBTI测试</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title">📈 本月收支概况</div>
+                    <div id="dash-chart" style="height:200px;display:flex;align-items:flex-end;justify-content:space-around;gap:4px;padding:10px 0;"></div>
+                </div>
+            </div>
+            <div class="card" id="dash-alerts-card">
+                <div class="card-title">🔔 提醒通知</div>
+                <div id="dash-alerts"></div>
+            </div>
+        </div>
+
+        <!-- ============ Accounting ============ -->
+        <div class="page" id="page-accounting">
+            <div class="page-header">
+                <h2>记账管理</h2>
+                <p>记录你的每一笔收支</p>
+            </div>
+            <div class="summary-row">
+                <div class="summary-box">
+                    <div class="label">本月收入</div>
+                    <div class="value" style="color:var(--success);" id="acc-income">¥0.00</div>
+                </div>
+                <div class="summary-box">
+                    <div class="label">本月支出</div>
+                    <div class="value" style="color:var(--danger);" id="acc-expense">¥0.00</div>
+                </div>
+                <div class="summary-box">
+                    <div class="label">本月结余</div>
+                    <div class="value" style="color:var(--primary);" id="acc-balance">¥0.00</div>
+                </div>
+            </div>
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-title">➕ 添加记录</div>
+                    <form id="acc-form" onsubmit="return addAccount(event)">
+                        <div class="form-group">
+                            <label>类型</label>
+                            <select id="acc-type" onchange="updateAccCategories()">
+                                <option value="expense">支出</option>
+                                <option value="income">收入</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>金额</label>
+                                <input type="number" id="acc-amount" step="0.01" placeholder="0.00" required>
+                            </div>
+                            <div class="form-group">
+                                <label>分类</label>
+                                <select id="acc-category"></select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>日期</label>
+                                <input type="date" id="acc-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>备注</label>
+                                <input type="text" id="acc-note" placeholder="可选">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">添加记录</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 分类统计</div>
+                    <div id="acc-category-stats"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="justify-content:space-between;display:flex;">
+                    <span>📋 交易记录</span>
+                    <div style="display:flex;gap:8px;">
+                        <select id="acc-filter-month" onchange="renderAccounts()" style="width:auto;padding:6px 12px;font-size:13px;"></select>
+                        <button class="btn btn-outline btn-sm" onclick="clearAllAccounts()">清空</button>
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>类型</th>
+                                <th>分类</th>
+                                <th>金额</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="acc-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ Expiry Management ============ -->
+        <div class="page" id="page-expiry">
+            <div class="page-header">
+                <h2>过期管理</h2>
+                <p>管理物品有效期，不再浪费</p>
+            </div>
+            <div class="summary-row">
+                <div class="summary-box">
+                    <div class="label">已过期</div>
+                    <div class="value" style="color:var(--danger);" id="exp-expired">0</div>
+                </div>
+                <div class="summary-box">
+                    <div class="label">即将过期(7天内)</div>
+                    <div class="value" style="color:var(--warning);" id="exp-soon">0</div>
+                </div>
+                <div class="summary-box">
+                    <div class="label">安全</div>
+                    <div class="value" style="color:var(--success);" id="exp-safe">0</div>
+                </div>
+            </div>
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-title">➕ 添加物品</div>
+                    <form id="exp-form" onsubmit="return addExpiry(event)">
+                        <div class="form-group">
+                            <label>物品名称</label>
+                            <input type="text" id="exp-name" placeholder="如：牛奶、药品、化妆品" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>分类</label>
+                                <select id="exp-cat">
+                                    <option value="食品">食品</option>
+                                    <option value="药品">药品</option>
+                                    <option value="化妆品">化妆品</option>
+                                    <option value="日用品">日用品</option>
+                                    <option value="其他">其他</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>过期日期</label>
+                                <input type="date" id="exp-date" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>备注</label>
+                            <input type="text" id="exp-note" placeholder="可选">
+                        </div>
+                        <div class="form-group">
+                            <label>物品照片</label>
+                            <div class="photo-upload-area" id="exp-photo-area" onclick="document.getElementById('exp-photo').click()">
+                                <div class="upload-icon">📸</div>
+                                <div class="upload-text">点击上传照片（可选）</div>
+                                <div class="upload-text" style="font-size:11px;opacity:0.7;">支持 JPG / PNG / WebP，自动压缩</div>
+                            </div>
+                            <input type="file" id="exp-photo" accept="image/*" style="display:none;" onchange="previewExpiryPhoto(this)">
+                        </div>
+                        <button type="submit" class="btn btn-primary">添加物品</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <div class="card-title">💡 使用建议</div>
+                    <div style="font-size:14px;line-height:2;color:var(--text-light);">
+                        <p>🔴 <strong>红色</strong>：已过期，请勿使用</p>
+                        <p>🟡 <strong>黄色</strong>：7天内过期，尽快使用</p>
+                        <p>🟢 <strong>绿色</strong>：安全，可正常使用</p>
+                        <p>📸 可上传物品照片，点击缩略图查看大图</p>
+                        <p style="margin-top:12px;">📌 定期检查过期物品，减少浪费</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="justify-content:space-between;display:flex;">
+                    <span>📦 物品列表</span>
+                    <select id="exp-filter" onchange="renderExpiry()" style="width:auto;padding:6px 12px;font-size:13px;">
+                        <option value="all">全部</option>
+                        <option value="expired">已过期</option>
+                        <option value="soon">即将过期</option>
+                        <option value="safe">安全</option>
+                    </select>
+                </div>
+                <div id="exp-list"></div>
+            </div>
+        </div>
+
+        <!-- ============ Efficiency Management ============ -->
+        <div class="page" id="page-efficiency">
+            <div class="page-header">
+                <h2>效能管理</h2>
+                <p>提升效率，管理任务</p>
+            </div>
+            <div class="grid grid-2">
+                <div class="card">
+                    <div class="card-title">📝 任务清单</div>
+                    <form id="task-form" onsubmit="return addTask(event)" style="display:flex;gap:8px;margin-bottom:16px;">
+                        <input type="text" id="task-input" placeholder="添加新任务..." required>
+                        <select id="task-priority" style="width:auto;">
+                            <option value="low">低</option>
+                            <option value="medium" selected>中</option>
+                            <option value="high">高</option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">添加</button>
+                    </form>
+                    <div style="display:flex;gap:8px;margin-bottom:16px;">
+                        <button class="btn btn-outline btn-sm" onclick="filterTasks('all')" id="task-filter-all">全部</button>
+                        <button class="btn btn-outline btn-sm" onclick="filterTasks('active')" id="task-filter-active">进行中</button>
+                        <button class="btn btn-outline btn-sm" onclick="filterTasks('done')" id="task-filter-done">已完成</button>
+                    </div>
+                    <div id="task-list"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🍅 番茄钟</div>
+                    <div class="pomodoro-container">
+                        <div class="timer-mode" id="timer-mode">专注时间</div>
+                        <div class="timer-display" id="timer-display">25:00</div>
+                        <div class="timer-progress">
+                            <div class="timer-progress-bar" id="timer-bar"></div>
+                        </div>
+                        <div class="timer-controls">
+                            <button class="btn btn-primary" id="timer-start" onclick="toggleTimer()">开始</button>
+                            <button class="btn btn-outline" onclick="resetTimer()">重置</button>
+                        </div>
+                        <div style="margin-top:20px;font-size:14px;color:var(--text-light);">
+                            今日完成: <strong id="pomo-count" style="color:var(--primary);">0</strong> 个番茄钟
+                        </div>
+                        <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+                            <button class="btn btn-outline btn-sm" onclick="setPomoMode('work',25)">专注 25min</button>
+                            <button class="btn btn-outline btn-sm" onclick="setPomoMode('short',5)">短休 5min</button>
+                            <button class="btn btn-outline btn-sm" onclick="setPomoMode('long',15)">长休 15min</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">📈 效能统计</div>
+                <div class="grid grid-3">
+                    <div style="text-align:center;padding:16px;">
+                        <div style="font-size:36px;font-weight:700;color:var(--primary);" id="eff-total-tasks">0</div>
+                        <div style="font-size:13px;color:var(--text-light);margin-top:4px;">总任务数</div>
+                    </div>
+                    <div style="text-align:center;padding:16px;">
+                        <div style="font-size:36px;font-weight:700;color:var(--success);" id="eff-done-tasks">0</div>
+                        <div style="font-size:13px;color:var(--text-light);margin-top:4px;">已完成</div>
+                    </div>
+                    <div style="text-align:center;padding:16px;">
+                        <div style="font-size:36px;font-weight:700;color:var(--info);" id="eff-completion-rate">0%</div>
+                        <div style="font-size:13px;color:var(--text-light);margin-top:4px;">完成率</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ Weather ============ -->
+        <div class="page" id="page-weather">
+            <div class="page-header">
+                <h2>天气查询</h2>
+                <p>查看全球城市天气</p>
+            </div>
+            <div class="card">
+                <div class="weather-search">
+                    <input type="text" id="weather-city" placeholder="输入城市名称，如：北京、上海、广州...">
+                    <button class="btn btn-primary" onclick="searchWeather()">🔍 查询</button>
+                    <button class="btn btn-outline" onclick="useMyLocation()">📍 我的定位</button>
+                </div>
+                <div id="weather-saved-hint" style="font-size:12px;color:var(--text-muted);margin-top:8px;"></div>
+                <div id="weather-content">
+                    <div class="empty-state">
+                        <div class="icon">🌤️</div>
+                        <p>输入城市名称查询天气</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MBTI ============ -->
+        <div class="page" id="page-mbti">
+            <div class="page-header">
+                <h2>MBTI 人格测试</h2>
+                <p>探索你的性格类型</p>
+            </div>
+            <div class="card" id="mbti-intro-card">
+                <div class="mbti-intro">
+                    <div class="icon">🧠</div>
+                    <h3>MBTI 性格测试</h3>
+                    <p>MBTI（Myers-Briggs Type Indicator）通过四个维度的偏好组合，帮助你了解自己的性格类型。本测试共28题，约需5-8分钟完成。请根据直觉选择最符合你的选项。</p>
+                    <div style="margin-top:24px;">
+                        <button class="btn btn-primary" onclick="startMBTI()" style="padding:12px 36px;font-size:16px;">开始测试</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card hidden" id="mbti-quiz-card">
+                <div class="mbti-progress-bar">
+                    <div class="mbti-progress-fill" id="mbti-progress" style="width:0%;"></div>
+                </div>
+                <div style="text-align:center;font-size:13px;color:var(--text-light);">
+                    第 <span id="mbti-current">1</span> / <span id="mbti-total">28</span> 题
+                </div>
+                <div class="mbti-question" id="mbti-question-area"></div>
+                <div style="display:flex;justify-content:space-between;margin-top:20px;">
+                    <button class="btn btn-outline" onclick="prevMBTIQuestion()">上一题</button>
+                    <button class="btn btn-primary hidden" id="mbti-finish-btn" onclick="finishMBTI()">查看结果</button>
+                </div>
+            </div>
+            <div class="card hidden" id="mbti-result-card"></div>
+        </div>
+
+        <!-- ============ Hot Search ============ -->
+        <div class="page" id="page-hotsearch">
+            <div class="page-header">
+                <h2>热搜速览</h2>
+                <p>聚合各大平台热点，快速了解外面发生了什么</p>
+            </div>
+            <div class="hot-platforms" id="hot-platforms"></div>
+            <div class="card">
+                <div class="hot-toolbar">
+                    <input type="text" id="hot-filter" placeholder="🔍 搜索关键词过滤..." oninput="renderHotList()">
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <span id="hot-update-time" style="font-size:12px;color:var(--text-muted);"></span>
+                        <button class="btn btn-outline btn-sm hot-refresh-btn" onclick="loadHotSearch(true)">🔄 刷新</button>
+                    </div>
+                </div>
+                <div id="hot-content"></div>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    /* ============================================================
+       数据存储工具
+    ============================================================ */
+    const Store = {
+        get(key, def = []) {
+            try {
+                const v = localStorage.getItem(key);
+                return v ? JSON.parse(v) : def;
+            } catch { return def; }
+        },
+        set(key, val) {
+            localStorage.setItem(key, JSON.stringify(val));
+        }
+    };
+
+    /* ============================================================
+       密码认证模块
+    ============================================================ */
+    // 简单哈希函数（非加密级别，用于本地密码保护）
+    function simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const ch = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + ch;
+            hash = hash & hash;
+        }
+        // 再混合一轮增加复杂度
+        hash = ((hash >>> 0) * 2654435761) >>> 0;
+        return hash.toString(16);
+    }
+
+    function checkAuth() {
+        const storedHash = localStorage.getItem('app_password_hash');
+        const sessionAuth = sessionStorage.getItem('app_authenticated');
+
+        if (!storedHash) {
+            // 首次使用，显示设置密码界面
+            document.getElementById('login-mode').classList.add('hidden');
+            document.getElementById('setup-mode').classList.remove('hidden');
+            document.getElementById('login-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('setup-password').focus(), 100);
+        } else if (sessionAuth === 'true') {
+            // 当前会话已认证，直接进入
+            document.getElementById('login-overlay').classList.add('hidden');
+        } else {
+            // 需要输入密码
+            document.getElementById('login-mode').classList.remove('hidden');
+            document.getElementById('setup-mode').classList.add('hidden');
+            document.getElementById('login-overlay').classList.remove('hidden');
+            setTimeout(() => document.getElementById('login-password').focus(), 100);
+        }
+    }
+
+    function doSetup() {
+        const pwd = document.getElementById('setup-password').value;
+        const confirm = document.getElementById('setup-confirm').value;
+        const errEl = document.getElementById('setup-error');
+
+        if (pwd.length < 4) {
+            errEl.textContent = '密码至少需要4位字符';
+            return;
+        }
+        if (pwd !== confirm) {
+            errEl.textContent = '两次输入的密码不一致';
+            return;
+        }
+
+        localStorage.setItem('app_password_hash', simpleHash(pwd));
+        sessionStorage.setItem('app_authenticated', 'true');
+        document.getElementById('login-overlay').classList.add('hidden');
+        showToast('密码设置成功，欢迎使用！', 'success');
+    }
+
+    function doLogin() {
+        const pwd = document.getElementById('login-password').value;
+        const errEl = document.getElementById('login-error');
+        const storedHash = localStorage.getItem('app_password_hash');
+
+        if (simpleHash(pwd) === storedHash) {
+            sessionStorage.setItem('app_authenticated', 'true');
+            document.getElementById('login-overlay').classList.add('hidden');
+            document.getElementById('login-password').value = '';
+            errEl.textContent = '';
+            showToast('登录成功！', 'success');
+        } else {
+            errEl.textContent = '密码错误，请重新输入';
+            document.getElementById('login-password').value = '';
+            document.getElementById('login-password').focus();
+            // 抖动效果
+            const box = document.querySelector('.login-box');
+            box.style.animation = 'none';
+            setTimeout(() => { box.style.animation = 'shake 0.4s ease'; }, 10);
+        }
+    }
+
+    function doLogout() {
+        sessionStorage.removeItem('app_authenticated');
+        document.getElementById('login-password').value = '';
+        document.getElementById('login-error').textContent = '';
+        document.getElementById('login-mode').classList.remove('hidden');
+        document.getElementById('setup-mode').classList.add('hidden');
+        document.getElementById('login-overlay').classList.remove('hidden');
+        setTimeout(() => document.getElementById('login-password').focus(), 100);
+        showToast('已退出登录', 'success');
+    }
+
+    function changePassword() {
+        const old = prompt('请输入当前密码：');
+        if (old === null) return;
+        const storedHash = localStorage.getItem('app_password_hash');
+        if (simpleHash(old) !== storedHash) {
+            showToast('当前密码错误', 'error');
+            return;
+        }
+        const newPwd = prompt('请输入新密码（至少4位）：');
+        if (newPwd === null) return;
+        if (newPwd.length < 4) {
+            showToast('新密码至少需要4位', 'error');
+            return;
+        }
+        const confirmPwd = prompt('请确认新密码：');
+        if (confirmPwd !== newPwd) {
+            showToast('两次输入不一致', 'error');
+            return;
+        }
+        localStorage.setItem('app_password_hash', simpleHash(newPwd));
+        showToast('密码修改成功！', 'success');
+    }
+
+    /* ============================================================
+       导航
+    ============================================================ */
+    function navigate(page) {
+        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+        document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+        document.getElementById(`page-${page}`).classList.add('active');
+        if (page === 'dashboard') renderDashboard();
+        if (page === 'accounting') renderAccounts();
+        if (page === 'expiry') renderExpiry();
+        if (page === 'efficiency') renderTasks();
+        if (page === 'weather') initWeather();
+        if (page === 'hotsearch') {
+            renderHotPlatforms();
+            if (!hotDataCache[currentPlatform]) loadHotSearch();
+        }
+    }
+
+    document.querySelectorAll('.nav-item').forEach(el => {
+        el.addEventListener('click', () => navigate(el.dataset.page));
+    });
+
+    // ESC键关闭图片预览
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeLightbox();
+    });
+
+    /* ============================================================
+       Toast 提示
+    ============================================================ */
+    function showToast(msg, type = '') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast show ' + type;
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    /* ============================================================
+       日期工具
+    ============================================================ */
+    function todayStr() {
+        return new Date().toISOString().split('T')[0];
+    }
+    function daysBetween(dateStr) {
+        const diff = new Date(dateStr) - new Date(new Date().toDateString());
+        return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    }
+    function formatDate(dateStr) {
+        const d = new Date(dateStr);
+        return `${d.getMonth()+1}月${d.getDate()}日`;
+    }
+
+    /* ============================================================
+       记账模块
+    ============================================================ */
+    const ACC_CATEGORIES = {
+        expense: ['餐饮', '交通', '购物', '娱乐', '住房', '医疗', '教育', '通讯', '其他'],
+        income: ['工资', '奖金', '投资', '兼职', '红包', '其他']
+    };
+
+    function updateAccCategories() {
+        const type = document.getElementById('acc-type').value;
+        const sel = document.getElementById('acc-category');
+        sel.innerHTML = ACC_CATEGORIES[type].map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    function addAccount(e) {
+        e.preventDefault();
+        const record = {
+            id: Date.now(),
+            type: document.getElementById('acc-type').value,
+            amount: parseFloat(document.getElementById('acc-amount').value),
+            category: document.getElementById('acc-category').value,
+            date: document.getElementById('acc-date').value,
+            note: document.getElementById('acc-note').value
+        };
+        const accounts = Store.get('accounts');
+        accounts.unshift(record);
+        Store.set('accounts', accounts);
+        document.getElementById('acc-form').reset();
+        document.getElementById('acc-date').value = todayStr();
+        updateAccCategories();
+        showToast('记录添加成功！', 'success');
+        renderAccounts();
+        return false;
+    }
+
+    function deleteAccount(id) {
+        let accounts = Store.get('accounts');
+        accounts = accounts.filter(a => a.id !== id);
+        Store.set('accounts', accounts);
+        showToast('已删除记录', 'success');
+        renderAccounts();
+    }
+
+    function clearAllAccounts() {
+        if (confirm('确定要清空所有记账记录吗？')) {
+            Store.set('accounts', []);
+            showToast('已清空所有记录', 'success');
+            renderAccounts();
+        }
+    }
+
+    function renderAccounts() {
+        const accounts = Store.get('accounts');
+        const now = new Date();
+        const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+        // 月份筛选
+        const months = [...new Set(accounts.map(a => a.date.substring(0,7)))].sort().reverse();
+        const filterSel = document.getElementById('acc-filter-month');
+        if (!filterSel.value) filterSel.value = monthStr;
+        filterSel.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('') + `<option value="all">全部</option>`;
+        const selectedMonth = filterSel.value || monthStr;
+        filterSel.value = selectedMonth;
+
+        const filtered = selectedMonth === 'all' ? accounts : accounts.filter(a => a.date.startsWith(selectedMonth));
+
+        // 统计
+        const income = filtered.filter(a => a.type === 'income').reduce((s, a) => s + a.amount, 0);
+        const expense = filtered.filter(a => a.type === 'expense').reduce((s, a) => s + a.amount, 0);
+        document.getElementById('acc-income').textContent = `¥${income.toFixed(2)}`;
+        document.getElementById('acc-expense').textContent = `¥${expense.toFixed(2)}`;
+        document.getElementById('acc-balance').textContent = `¥${(income - expense).toFixed(2)}`;
+
+        // 分类统计
+        const catStats = {};
+        filtered.forEach(a => {
+            if (!catStats[a.category]) catStats[a.category] = { income: 0, expense: 0 };
+            catStats[a.category][a.type] += a.amount;
+        });
+        const catHtml = Object.entries(catStats).map(([cat, v]) => `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;">
+                <span>${cat}</span>
+                <span>${v.expense > 0 ? `<span style="color:var(--danger);">-¥${v.expense.toFixed(2)}</span>` : ''}
+                      ${v.income > 0 ? `<span style="color:var(--success);">+¥${v.income.toFixed(2)}</span>` : ''}</span>
+            </div>
+        `).join('');
+        document.getElementById('acc-category-stats').innerHTML = catHtml || '<div class="empty-state"><p>暂无数据</p></div>';
+
+        // 列表
+        const listHtml = filtered.length ? filtered.map(a => `
+            <tr>
+                <td>${a.date}</td>
+                <td><span class="badge ${a.type === 'income' ? 'badge-income' : 'badge-expense'}">${a.type === 'income' ? '收入' : '支出'}</span></td>
+                <td>${a.category}</td>
+                <td style="font-weight:600;color:${a.type === 'income' ? 'var(--success)' : 'var(--danger)'};">
+                    ${a.type === 'income' ? '+' : '-'}¥${a.amount.toFixed(2)}
+                </td>
+                <td>${a.note || '-'}</td>
+                <td><button class="btn btn-danger btn-sm" onclick="deleteAccount(${a.id})">删除</button></td>
+            </tr>
+        `).join('') : '<tr><td colspan="6"><div class="empty-state"><div class="icon">💰</div><p>暂无记录，开始记账吧！</p></div></td></tr>';
+        document.getElementById('acc-list').innerHTML = listHtml;
+    }
+
+    /* ============================================================
+       过期管理模块
+    ============================================================ */
+    let expPhotoData = null; // 临时存储当前选择的照片 base64
+
+    // 预览选中的照片
+    function previewExpiryPhoto(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) {
+            showToast('图片不能超过10MB', 'error');
+            input.value = '';
+            return;
+        }
+        // 读取并压缩图片
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            compressImage(e.target.result, 400, 0.7, function(compressed) {
+                expPhotoData = compressed;
+                const area = document.getElementById('exp-photo-area');
+                area.classList.add('has-photo');
+                area.innerHTML = `
+                    <img src="${compressed}" class="photo-preview" alt="预览">
+                    <button type="button" class="photo-clear-btn" onclick="event.stopPropagation();clearExpiryPhoto()">✕</button>
+                `;
+            });
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 清除已选照片
+    function clearExpiryPhoto() {
+        expPhotoData = null;
+        document.getElementById('exp-photo').value = '';
+        const area = document.getElementById('exp-photo-area');
+        area.classList.remove('has-photo');
+        area.innerHTML = `
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">点击上传照片（可选）</div>
+            <div class="upload-text" style="font-size:11px;opacity:0.7;">支持 JPG / PNG / WebP，自动压缩</div>
+        `;
+    }
+
+    // 图片压缩函数（避免 localStorage 溢出）
+    function compressImage(dataUrl, maxSize, quality, callback) {
+        const img = new Image();
+        img.onload = function() {
+            let w = img.width, h = img.height;
+            if (w > maxSize || h > maxSize) {
+                if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+                else { w = Math.round(w * maxSize / h); h = maxSize; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = dataUrl;
+    }
+
+    // 图片预览大图
+    function openLightbox(src) {
+        const lb = document.createElement('div');
+        lb.className = 'lightbox';
+        lb.innerHTML = `
+            <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+            <img src="${src}" alt="物品照片">
+        `;
+        lb.onclick = function(e) { if (e.target === lb) closeLightbox(); };
+        document.body.appendChild(lb);
+    }
+
+    function closeLightbox() {
+        const lb = document.querySelector('.lightbox');
+        if (lb) lb.remove();
+    }
+
+    function addExpiry(e) {
+        e.preventDefault();
+        const item = {
+            id: Date.now(),
+            name: document.getElementById('exp-name').value,
+            category: document.getElementById('exp-cat').value,
+            date: document.getElementById('exp-date').value,
+            note: document.getElementById('exp-note').value,
+            photo: expPhotoData
+        };
+        const items = Store.get('expiryItems');
+        items.push(item);
+        Store.set('expiryItems', items);
+        document.getElementById('exp-form').reset();
+        clearExpiryPhoto();
+        document.getElementById('exp-date').value = todayStr();
+        showToast('物品添加成功！', 'success');
+        renderExpiry();
+        return false;
+    }
+
+    function deleteExpiry(id) {
+        let items = Store.get('expiryItems');
+        items = items.filter(i => i.id !== id);
+        Store.set('expiryItems', items);
+        showToast('已删除', 'success');
+        renderExpiry();
+    }
+
+    // 通过ID查找物品照片并打开大图预览
+    function showItemPhoto(id) {
+        const items = Store.get('expiryItems');
+        const item = items.find(i => i.id === id);
+        if (item && item.photo) {
+            openLightbox(item.photo);
+        }
+    }
+
+    function renderExpiry() {
+        let items = Store.get('expiryItems');
+        items.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        const filter = document.getElementById('exp-filter').value;
+        const enriched = items.map(i => {
+            const days = daysBetween(i.date);
+            let status = 'safe';
+            if (days < 0) status = 'expired';
+            else if (days <= 7) status = 'soon';
+            return { ...i, days, status };
+        });
+
+        const filtered = filter === 'all' ? enriched : enriched.filter(i => i.status === filter);
+
+        // 统计
+        const expired = enriched.filter(i => i.status === 'expired').length;
+        const soon = enriched.filter(i => i.status === 'soon').length;
+        const safe = enriched.filter(i => i.status === 'safe').length;
+        document.getElementById('exp-expired').textContent = expired;
+        document.getElementById('exp-soon').textContent = soon;
+        document.getElementById('exp-safe').textContent = safe;
+
+        // 列表
+        const listHtml = filtered.length ? filtered.map(i => {
+            let badge, countdown, color;
+            if (i.status === 'expired') {
+                badge = 'badge-danger'; countdown = `已过期${Math.abs(i.days)}天`; color = 'var(--danger)';
+            } else if (i.status === 'soon') {
+                badge = 'badge-warning'; countdown = `${i.days}天后过期`; color = 'var(--warning)';
+            } else {
+                badge = 'badge-success'; countdown = `${i.days}天后过期`; color = 'var(--success)';
+            }
+            const catIcon = { '食品': '🍔', '药品': '💊', '化妆品': '💄', '日用品': '🧴', '其他': '📦' }[i.category] || '📦';
+            const photoHtml = i.photo
+                ? `<img src="${i.photo}" class="item-photo" onclick="showItemPhoto(${i.id})" alt="${i.name}">`
+                : `<div class="item-photo-placeholder">${catIcon}</div>`;
+            return `
+                <div class="expiry-item">
+                    ${photoHtml}
+                    <div class="item-name">
+                        ${i.name}
+                        <div class="item-cat">${i.category}${i.note ? ' · ' + i.note : ''}</div>
+                    </div>
+                    <div class="item-date">${i.date}</div>
+                    <div class="item-countdown" style="color:${color};">
+                        <span class="badge ${badge}">${countdown}</span>
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteExpiry(${i.id})">删除</button>
+                </div>
+            `;
+        }).join('') : '<div class="empty-state"><div class="icon">📅</div><p>暂无物品，添加需要管理的物品吧！</p></div>';
+        document.getElementById('exp-list').innerHTML = listHtml;
+    }
+
+    /* ============================================================
+       效能管理 - 任务清单
+    ============================================================ */
+    let taskFilter = 'all';
+
+    function addTask(e) {
+        e.preventDefault();
+        const task = {
+            id: Date.now(),
+            text: document.getElementById('task-input').value,
+            priority: document.getElementById('task-priority').value,
+            done: false,
+            createdAt: new Date().toISOString()
+        };
+        const tasks = Store.get('tasks');
+        tasks.unshift(task);
+        Store.set('tasks', tasks);
+        document.getElementById('task-form').reset();
+        showToast('任务添加成功！', 'success');
+        renderTasks();
+        return false;
+    }
+
+    function toggleTask(id) {
+        const tasks = Store.get('tasks');
+        const t = tasks.find(t => t.id === id);
+        if (t) t.done = !t.done;
+        Store.set('tasks', tasks);
+        renderTasks();
+    }
+
+    function deleteTask(id) {
+        let tasks = Store.get('tasks');
+        tasks = tasks.filter(t => t.id !== id);
+        Store.set('tasks', tasks);
+        showToast('已删除任务', 'success');
+        renderTasks();
+    }
+
+    function filterTasks(f) {
+        taskFilter = f;
+        document.querySelectorAll('[id^="task-filter-"]').forEach(b => b.classList.remove('btn-primary'));
+        document.getElementById(`task-filter-${f}`).classList.add('btn-primary');
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const tasks = Store.get('tasks');
+        let filtered = tasks;
+        if (taskFilter === 'active') filtered = tasks.filter(t => !t.done);
+        if (taskFilter === 'done') filtered = tasks.filter(t => t.done);
+
+        const priorityLabel = { high: '高', medium: '中', low: '低' };
+        const listHtml = filtered.length ? filtered.map(t => `
+            <div class="task-item ${t.done ? 'done' : ''}">
+                <label class="checkbox-wrap">
+                    <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTask(${t.id})">
+                </label>
+                <span class="task-priority priority-${t.priority}">${priorityLabel[t.priority]}</span>
+                <span class="task-text">${t.text}</span>
+                <button class="btn btn-danger btn-sm" onclick="deleteTask(${t.id})">✕</button>
+            </div>
+        `).join('') : '<div class="empty-state"><div class="icon">⚡</div><p>暂无任务</p></div>';
+        document.getElementById('task-list').innerHTML = listHtml;
+
+        // 统计
+        const total = tasks.length;
+        const done = tasks.filter(t => t.done).length;
+        document.getElementById('eff-total-tasks').textContent = total;
+        document.getElementById('eff-done-tasks').textContent = done;
+        document.getElementById('eff-completion-rate').textContent = total ? Math.round(done/total*100) + '%' : '0%';
+    }
+
+    /* ============================================================
+       番茄钟
+    ============================================================ */
+    let timerMode = 'work';
+    let timerDuration = 25 * 60;
+    let timerRemaining = timerDuration;
+    let timerInterval = null;
+    let timerRunning = false;
+
+    function updateTimerDisplay() {
+        const m = Math.floor(timerRemaining / 60);
+        const s = timerRemaining % 60;
+        document.getElementById('timer-display').textContent =
+            `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        document.getElementById('timer-bar').style.width =
+            (timerRemaining / timerDuration * 100) + '%';
+    }
+
+    function toggleTimer() {
+        if (timerRunning) {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            document.getElementById('timer-start').textContent = '继续';
+        } else {
+            timerRunning = true;
+            document.getElementById('timer-start').textContent = '暂停';
+            timerInterval = setInterval(() => {
+                timerRemaining--;
+                updateTimerDisplay();
+                if (timerRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    timerRunning = false;
+                    document.getElementById('timer-start').textContent = '开始';
+                    onTimerComplete();
+                }
+            }, 1000);
+        }
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerRemaining = timerDuration;
+        document.getElementById('timer-start').textContent = '开始';
+        updateTimerDisplay();
+    }
+
+    function setPomoMode(mode, minutes) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerMode = mode;
+        timerDuration = minutes * 60;
+        timerRemaining = timerDuration;
+        const modeText = { work: '专注时间', short: '短休息', long: '长休息' };
+        document.getElementById('timer-mode').textContent = modeText[mode];
+        document.getElementById('timer-start').textContent = '开始';
+        updateTimerDisplay();
+    }
+
+    function onTimerComplete() {
+        if (timerMode === 'work') {
+            const count = Store.get('pomodoroCount', 0) + 1;
+            Store.set('pomodoroCount', count);
+            const dateKey = new Date().toDateString();
+            const daily = Store.get('dailyPomodoros', {});
+            daily[dateKey] = (daily[dateKey] || 0) + 1;
+            Store.set('dailyPomodoros', daily);
+            document.getElementById('pomo-count').textContent = daily[dateKey];
+            showToast('🍅 番茄钟完成！休息一下吧', 'success');
+            setPomoMode('short', 5);
+        } else {
+            showToast('休息结束，继续加油！', 'success');
+            setPomoMode('work', 25);
+        }
+    }
+
+    /* ============================================================
+       天气模块 (Open-Meteo API)
+    ============================================================ */
+    const WEATHER_CODES = {
+        0: { desc: '晴', icon: '☀️' },
+        1: { desc: '大部晴朗', icon: '🌤️' },
+        2: { desc: '多云', icon: '⛅' },
+        3: { desc: '阴天', icon: '☁️' },
+        45: { desc: '有雾', icon: '🌫️' },
+        48: { desc: '雾凇', icon: '🌫️' },
+        51: { desc: '小毛毛雨', icon: '🌦️' },
+        53: { desc: '毛毛雨', icon: '🌦️' },
+        55: { desc: '大毛毛雨', icon: '🌧️' },
+        56: { desc: '冻毛毛雨', icon: '🌧️' },
+        57: { desc: '强冻毛毛雨', icon: '🌧️' },
+        61: { desc: '小雨', icon: '🌦️' },
+        63: { desc: '中雨', icon: '🌧️' },
+        65: { desc: '大雨', icon: '🌧️' },
+        66: { desc: '冻雨', icon: '🌧️' },
+        67: { desc: '强冻雨', icon: '🌧️' },
+        71: { desc: '小雪', icon: '🌨️' },
+        73: { desc: '中雪', icon: '🌨️' },
+        75: { desc: '大雪', icon: '❄️' },
+        77: { desc: '雪粒', icon: '🌨️' },
+        80: { desc: '阵雨', icon: '🌦️' },
+        81: { desc: '中阵雨', icon: '🌧️' },
+        82: { desc: '强阵雨', icon: '⛈️' },
+        85: { desc: '阵雪', icon: '🌨️' },
+        86: { desc: '强阵雪', icon: '❄️' },
+        95: { desc: '雷暴', icon: '⛈️' },
+        96: { desc: '雷暴伴冰雹', icon: '⛈️' },
+        99: { desc: '强雷暴伴冰雹', icon: '⛈️' }
+    };
+
+    async function searchWeather() {
+        const city = document.getElementById('weather-city').value.trim();
+        if (!city) { showToast('请输入城市名称', 'error'); return; }
+
+        document.getElementById('weather-content').innerHTML =
+            '<div class="empty-state"><div class="icon">⏳</div><p>正在查询...</p></div>';
+
+        try {
+            const geoRes = await fetch(
+                `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=zh`
+            );
+            const geoData = await geoRes.json();
+
+            if (!geoData.results || geoData.results.length === 0) {
+                document.getElementById('weather-content').innerHTML =
+                    '<div class="empty-state"><div class="icon">🔍</div><p>未找到该城市，请检查名称</p></div>';
+                return;
+            }
+
+            const loc = geoData.results[0];
+            // 保存城市信息，下次自动加载
+            Store.set('weather_last', { type: 'city', name: loc.name, lat: loc.latitude, lon: loc.longitude });
+            updateWeatherHint(loc.name);
+            await fetchWeather(loc.latitude, loc.longitude, loc.name);
+        } catch (err) {
+            document.getElementById('weather-content').innerHTML =
+                '<div class="empty-state"><div class="icon">⚠️</div><p>查询失败，请检查网络后重试</p></div>';
+        }
+    }
+
+    async function fetchWeather(lat, lon, cityName) {
+        try {
+            const res = await fetch(
+                `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+                `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m` +
+                `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
+                `&timezone=auto&forecast_days=7`
+            );
+            const data = await res.json();
+            renderWeather(data, cityName);
+        } catch (err) {
+            document.getElementById('weather-content').innerHTML =
+                '<div class="empty-state"><div class="icon">⚠️</div><p>获取天气数据失败</p></div>';
+        }
+    }
+
+    function renderWeather(data, cityName) {
+        const cur = data.current;
+        const w = WEATHER_CODES[cur.weather_code] || { desc: '未知', icon: '🌡️' };
+        const daily = data.daily;
+
+        const forecastHtml = daily.time.map((t, i) => {
+            const dw = WEATHER_CODES[daily.weather_code[i]] || { desc: '未知', icon: '🌡️' };
+            const d = new Date(t);
+            const dayLabel = i === 0 ? '今天' : ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+            return `
+                <div class="forecast-day">
+                    <div class="day">${dayLabel}</div>
+                    <div class="icon">${dw.icon}</div>
+                    <div class="temp">${Math.round(daily.temperature_2m_max[i])}°</div>
+                    <div class="temp-low">${Math.round(daily.temperature_2m_min[i])}°</div>
+                </div>
+            `;
+        }).join('');
+
+        document.getElementById('weather-content').innerHTML = `
+            <div class="weather-card">
+                <div class="city">📍 ${cityName}</div>
+                <div class="temp">${Math.round(cur.temperature_2m)}°C</div>
+                <div class="desc">${w.icon} ${w.desc} · 体感 ${Math.round(cur.apparent_temperature)}°C</div>
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <div class="icon">💧</div>
+                        <div class="label">湿度</div>
+                        <div class="value">${cur.relative_humidity_2m}%</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="icon">💨</div>
+                        <div class="label">风速</div>
+                        <div class="value">${Math.round(cur.wind_speed_10m)} km/h</div>
+                    </div>
+                    <div class="weather-detail">
+                        <div class="icon">🌡️</div>
+                        <div class="label">体感</div>
+                        <div class="value">${Math.round(cur.apparent_temperature)}°C</div>
+                    </div>
+                </div>
+            </div>
+            <div class="weather-forecast">${forecastHtml}</div>
+        `;
+    }
+
+    function useMyLocation() {
+        if (!navigator.geolocation) {
+            showToast('您的浏览器不支持定位功能', 'error');
+            return;
+        }
+        document.getElementById('weather-content').innerHTML =
+            '<div class="empty-state"><div class="icon">📍</div><p>正在获取您的位置...</p></div>';
+        navigator.geolocation.getCurrentPosition(
+            async pos => {
+                // 保存定位信息，下次自动加载
+                Store.set('weather_last', { type: 'gps', name: '当前位置', lat: pos.coords.latitude, lon: pos.coords.longitude });
+                updateWeatherHint('当前位置');
+                await fetchWeather(pos.coords.latitude, pos.coords.longitude, '当前位置');
+            },
+            () => {
+                document.getElementById('weather-content').innerHTML =
+                    '<div class="empty-state"><div class="icon">⚠️</div><p>定位失败，请允许浏览器访问位置信息，或手动输入城市名称</p></div>';
+            }
+        );
+    }
+
+    /* 打开天气页时自动加载上次的位置 */
+    function initWeather() {
+        const last = Store.get('weather_last', null);
+        const hintEl = document.getElementById('weather-saved-hint');
+        if (last) {
+            // 有上次记录，直接加载
+            document.getElementById('weather-city').value = last.type === 'city' ? last.name : '';
+            hintEl.innerHTML = `📌 已记住上次位置：<strong>${last.name}</strong>（自动加载中...） <a href="javascript:clearWeatherMemory()" style="color:var(--primary);cursor:pointer;">清除记忆</a>`;
+            document.getElementById('weather-content').innerHTML =
+                '<div class="empty-state"><div class="icon">⏳</div><p>正在加载 ' + last.name + ' 的天气...</p></div>';
+            fetchWeather(last.lat, last.lon, last.name);
+        } else if (navigator.geolocation) {
+            // 首次使用，尝试自动定位
+            hintEl.innerHTML = '📍 首次使用，正在尝试获取您的位置...';
+            document.getElementById('weather-content').innerHTML =
+                '<div class="empty-state"><div class="icon">📍</div><p>正在获取您的位置...</p></div>';
+            navigator.geolocation.getCurrentPosition(
+                async pos => {
+                    Store.set('weather_last', { type: 'gps', name: '当前位置', lat: pos.coords.latitude, lon: pos.coords.longitude });
+                    hintEl.innerHTML = `📌 已记住您的位置：<strong>当前位置</strong>（下次自动加载） <a href="javascript:clearWeatherMemory()" style="color:var(--primary);cursor:pointer;">清除记忆</a>`;
+                    await fetchWeather(pos.coords.latitude, pos.coords.longitude, '当前位置');
+                },
+                () => {
+                    // 定位失败，默认加载北京
+                    hintEl.innerHTML = '⚠️ 定位失败，已加载默认城市北京。请手动搜索或允许定位权限。';
+                    document.getElementById('weather-city').value = '北京';
+                    searchWeather();
+                }
+            );
+        } else {
+            hintEl.innerHTML = '';
+            document.getElementById('weather-city').value = '北京';
+            searchWeather();
+        }
+    }
+
+    function clearWeatherMemory() {
+        localStorage.removeItem('weather_last');
+        document.getElementById('weather-saved-hint').innerHTML = '✅ 已清除位置记忆，下次将重新定位';
+        document.getElementById('weather-city').value = '';
+        document.getElementById('weather-content').innerHTML =
+            '<div class="empty-state"><div class="icon">🌤️</div><p>已清除记忆，请输入城市名称或使用定位</p></div>';
+        showToast('位置记忆已清除', 'success');
+    }
+
+    function updateWeatherHint(name) {
+        document.getElementById('weather-saved-hint').innerHTML =
+            `📌 已记住位置：<strong>${name}</strong>（下次自动加载） <a href="javascript:clearWeatherMemory()" style="color:var(--primary);cursor:pointer;">清除记忆</a>`;
+    }
+
+    /* ============================================================
+       MBTI 测试
+    ============================================================ */
+    const MBTI_QUESTIONS = [
+        { q: '在聚会中，你更喜欢：', a: '与许多人交流，包括陌生人', b: '只与少数熟人深入交谈', dim: 'EI', dir: 'E' },
+        { q: '你通常：', a: '先行动再思考', b: '先思考再行动', dim: 'EI', dir: 'I' },
+        { q: '在社交场合中，你觉得：', a: '充满活力', b: '消耗精力', dim: 'EI', dir: 'E' },
+        { q: '你喜欢的生活方式是：', a: '丰富多样、充满活动', b: '安静、有规律', dim: 'EI', dir: 'E' },
+        { q: '周末休息时，你倾向于：', a: '约朋友出去聚会', b: '独自在家看书或看剧', dim: 'EI', dir: 'E' },
+        { q: '在工作中，你更喜欢：', a: '频繁与团队讨论交流', b: '独立完成深度工作', dim: 'EI', dir: 'E' },
+        { q: '认识新朋友时，你通常是：', a: '主动搭话的人', b: '等别人来找你的人', dim: 'EI', dir: 'E' },
+
+        { q: '你更关注：', a: '具体的事实和细节', b: '整体的概念和可能性', dim: 'SN', dir: 'S' },
+        { q: '你认为更有价值的是：', a: '实际的经验', b: '创新的灵感', dim: 'SN', dir: 'S' },
+        { q: '学习新技能时，你更喜欢：', a: '按步骤一步步学', b: '先理解整体框架', dim: 'SN', dir: 'S' },
+        { q: '描述一件事时，你倾向于：', a: '用具体的例子和数据', b: '用比喻和抽象概念', dim: 'SN', dir: 'S' },
+        { q: '你更欣赏的人是：', a: '脚踏实地、注重现实的人', b: '富有想象力、有远见的人', dim: 'SN', dir: 'S' },
+        { q: '面对新项目时，你更关心：', a: '如何用已知方法解决', b: '能否用全新方式突破', dim: 'SN', dir: 'S' },
+        { q: '阅读时你更偏好：', a: '实用指南或纪实文学', b: '科幻小说或哲学思辨', dim: 'SN', dir: 'S' },
+
+        { q: '做决定时，你更依赖：', a: '逻辑和分析', b: '感受和价值观', dim: 'TF', dir: 'T' },
+        { q: '当朋友遇到问题时，你会：', a: '帮他分析解决方案', b: '先给予情感上的支持', dim: 'TF', dir: 'T' },
+        { q: '你认为更重要的品质是：', a: '公正和理性', b: '同情和善良', dim: 'TF', dir: 'T' },
+        { q: '评价一件事时，你更看重：', a: '是否合理有效', b: '是否考虑了人的感受', dim: 'TF', dir: 'T' },
+        { q: '在争论中，你倾向于：', a: '坚持客观事实', b: '维护和谐关系', dim: 'TF', dir: 'T' },
+        { q: '你更容易被批评的是：', a: '不够有逻辑', b: '不够体贴', dim: 'TF', dir: 'T' },
+        { q: '面对冲突，你更倾向于：', a: '就事论事地辩论', b: '寻求和解与共识', dim: 'TF', dir: 'T' },
+
+        { q: '你更喜欢的生活方式是：', a: '有计划、有条理的', b: '灵活、随性的', dim: 'JP', dir: 'J' },
+        { q: '面对截止日期时，你通常：', a: '提前完成', b: '最后冲刺', dim: 'JP', dir: 'J' },
+        { q: '旅行时你更倾向于：', a: '制定详细行程表', b: '走到哪看到哪', dim: 'JP', dir: 'J' },
+        { q: '你的工作空间通常：', a: '整洁有序', b: '比较随意', dim: 'JP', dir: 'J' },
+        { q: '做选择时，你更倾向于：', a: '尽快做出决定', b: '保留多种可能', dim: 'JP', dir: 'J' },
+        { q: '面对规则，你的态度是：', a: '遵守规则让生活更高效', b: '规则是可以灵活调整的', dim: 'JP', dir: 'J' },
+        { q: '安排周末时，你更倾向于：', a: '列出待办清单逐一完成', b: '随心安排灵活调整', dim: 'JP', dir: 'J' }
+    ];
+
+    const MBTI_TYPES = {
+        'INTJ': { name: '建筑师', desc: '富有想象力又有战略思维的人，一切都在计划之中。你是独立而果断的思考者，善于将理论转化为实际行动方案。你天生对系统运作方式充满好奇，喜欢在背后推动变革。', traits: ['战略思维', '独立自主', '追求完美', '理性决策'] },
+        'INTP': { name: '逻辑学家', desc: '对知识有着永不满足的渴望，喜欢分析和理解一切。你是创新的思想家，享受发现事物背后的逻辑和规律。你善于发现问题并提出独到的解决方案。', traits: ['逻辑分析', '创新思维', '客观理性', '求知欲强'] },
+        'ENTJ': { name: '指挥官', desc: '天生的领导者，善于将人们凝聚在一起实现目标。你具有强大的意志力和决心，善于发现机遇并果断行动。你的组织能力和战略眼光让你在团队中脱颖而出。', traits: ['领导力强', '果断高效', '战略眼光', '目标导向'] },
+        'ENTP': { name: '辩论家', desc: '聪明好奇的思想者，不会放弃任何智力上的挑战。你善于看到事物之间的联系，喜欢辩论和探索新想法。你的创造力和灵活性让你总能找到新的角度。', traits: ['创新思维', '善于辩论', '适应力强', '充满好奇'] },
+        'INFJ': { name: '提倡者', desc: '安静而神秘，同时鼓舞人心且不知疲倦的理想主义者。你有着深刻的洞察力和同理心，善于理解他人的情感和动机。你致力于实现自己的远大理想。', traits: ['洞察力强', '理想主义', '同理心深', '坚定信念'] },
+        'INFP': { name: '调停者', desc: '诗意、善良的利他主义者，总是热切地为正义事业而努力。你有着丰富的内心世界和强烈的价值观。你富有创造力，对帮助他人和让世界变得更好充满热情。', traits: ['理想主义', '富有创意', '同理心强', '追求意义'] },
+        'ENFJ': { name: '主人公', desc: '富有魅力和鼓舞力的领导者，能够吸引听众。你天生善于理解他人需求，并以温暖和激情引导团队前进。你的沟通能力和感染力让你成为天然的领袖。', traits: ['感召力强', '善于沟通', '关心他人', '理想主义'] },
+        'ENFP': { name: '竞选者', desc: '热情、有创造力、爱社交的自由精神，总能找到微笑的理由。你充满活力和热情，善于激发他人的潜能。你的好奇心和开放心态让你在生活中不断发现新的可能。', traits: ['热情洋溢', '创意丰富', '善于激励', '自由奔放'] },
+        'ISTJ': { name: '物流师', desc: '实际而注重事实的人，可靠性不容怀疑。你是负责任的组织者，重视传统和秩序。你的踏实和严谨让团队可以信赖你完成任何任务。', traits: ['责任心强', '注重事实', '有条不紊', '传统可靠'] },
+        'ISFJ': { name: '守卫者', desc: '非常专注而温暖的守护者，时刻准备保护爱的人。你富有奉献精神，善于记住他人的细节和需求。你的善良和可靠让你成为朋友和家人最坚实的后盾。', traits: ['体贴入微', '忠诚可靠', '勤勉务实', '关心他人'] },
+        'ESTJ': { name: '总经理', desc: '出色的管理者，在管理事物或人的方面无与伦比。你重视秩序和效率，善于建立清晰的规则和流程。你的组织能力和决断力让你成为优秀的执行者。', traits: ['组织力强', '果断坚定', '注重效率', '传统务实'] },
+        'ESFJ': { name: '执政官', desc: '极有同情心，爱交往，受欢迎的人们，总是热心提供帮助。你天生善于关心他人，喜欢营造和谐的社交氛围。你的热心和可靠让你在社区中广受欢迎。', traits: ['热心助人', '善于社交', '忠诚可靠', '注重和谐'] },
+        'ISTP': { name: '鉴赏家', desc: '大胆而实际的实验家，擅长使用各种工具。你冷静而灵活，善于在紧急情况下快速行动。你享受动手解决问题，对机械和工具有着天然的亲和力。', traits: ['动手力强', '冷静灵活', '善于分析', '独立自主'] },
+        'ISFP': { name: '探险家', desc: '灵活迷人的艺术家，时刻准备探索和体验新事物。你有着敏锐的审美感受力，喜欢通过行动表达自我。你的温和与自由精神让你在生活中找到独特的美。', traits: ['艺术天赋', '温和随性', '审美敏锐', '活在当下'] },
+        'ESTP': { name: '企业家', desc: '聪明、精力充沛的人，真正享受生活在边缘地带。你善于捕捉当下的机会，行动力强。你的大胆和机智让你在动态环境中游刃有余。', traits: ['行动力强', '机智灵活', '善于应变', '充满活力'] },
+        'ESFP': { name: '表演者', desc: '自发的、精力充沛而热情的表演者，生活在他们周围永远不会无聊。你天生善于娱乐和感染他人，享受聚光灯。你的乐观和活力让每一个场合都变得有趣。', traits: ['热情活泼', '善于表达', '乐观开朗', '享受当下'] }
+    };
+
+    let mbtiAnswers = [];
+    let mbtiIndex = 0;
+
+    function startMBTI() {
+        mbtiAnswers = new Array(MBTI_QUESTIONS.length).fill(null);
+        mbtiIndex = 0;
+        document.getElementById('mbti-intro-card').classList.add('hidden');
+        document.getElementById('mbti-result-card').classList.add('hidden');
+        document.getElementById('mbti-quiz-card').classList.remove('hidden');
+        document.getElementById('mbti-total').textContent = MBTI_QUESTIONS.length;
+        renderMBTIQuestion();
+    }
+
+    function renderMBTIQuestion() {
+        const q = MBTI_QUESTIONS[mbtiIndex];
+        document.getElementById('mbti-current').textContent = mbtiIndex + 1;
+        document.getElementById('mbti-progress').style.width = ((mbtiIndex) / MBTI_QUESTIONS.length * 100) + '%';
+
+        const selected = mbtiAnswers[mbtiIndex];
+        document.getElementById('mbti-question-area').innerHTML = `
+            <div class="q-num">问题 ${mbtiIndex + 1} / ${MBTI_QUESTIONS.length}</div>
+            <div class="q-text">${q.q}</div>
+            <div class="mbti-choices">
+                <div class="mbti-choice ${selected === 'a' ? 'selected' : ''}" onclick="selectMBTI('a')">
+                    <strong>A</strong><br>${q.a}
+                </div>
+                <div class="mbti-choice ${selected === 'b' ? 'selected' : ''}" onclick="selectMBTI('b')">
+                    <strong>B</strong><br>${q.b}
+                </div>
+            </div>
+        `;
+
+        // 导航按钮
+        document.querySelector('button[onclick="prevMBTIQuestion()"]').classList.toggle('hidden', mbtiIndex === 0);
+        document.getElementById('mbti-finish-btn').classList.toggle('hidden', mbtiIndex < MBTI_QUESTIONS.length - 1);
+    }
+
+    function selectMBTI(choice) {
+        mbtiAnswers[mbtiIndex] = choice;
+        setTimeout(() => {
+            if (mbtiIndex < MBTI_QUESTIONS.length - 1) {
+                mbtiIndex++;
+                renderMBTIQuestion();
+            } else {
+                renderMBTIQuestion();
+                showToast('所有问题已完成，请查看结果', 'success');
+            }
+        }, 200);
+    }
+
+    function prevMBTIQuestion() {
+        if (mbtiIndex > 0) {
+            mbtiIndex--;
+            renderMBTIQuestion();
+        }
+    }
+
+    function finishMBTI() {
+        const scores = { E: 0, I: 0, S: 0, N: 0, T: 0, F: 0, J: 0, P: 0 };
+        MBTI_QUESTIONS.forEach((q, i) => {
+            if (mbtiAnswers[i] === 'a') scores[q.dir]++;
+            else if (mbtiAnswers[i] === 'b') {
+                const opposite = { E: 'I', I: 'E', S: 'N', N: 'S', T: 'F', F: 'T', J: 'P', P: 'J' };
+                scores[opposite[q.dir]]++;
+            }
+        });
+
+        const type = (scores.E >= scores.I ? 'E' : 'I') +
+                     (scores.S >= scores.N ? 'S' : 'N') +
+                     (scores.T >= scores.F ? 'T' : 'F') +
+                     (scores.J >= scores.P ? 'J' : 'P');
+
+        const info = MBTI_TYPES[type];
+        const dims = [
+            { label: '外向 E', val: scores.E, total: scores.E + scores.I, color: '#6C5CE7', oppLabel: '内向 I', oppVal: scores.I },
+            { label: '实感 S', val: scores.S, total: scores.S + scores.N, color: '#0984e3', oppLabel: '直觉 N', oppVal: scores.N },
+            { label: '思考 T', val: scores.T, total: scores.T + scores.F, color: '#00b894', oppLabel: '情感 F', oppVal: scores.F },
+            { label: '判断 J', val: scores.J, total: scores.J + scores.P, color: '#e17055', oppLabel: '感知 P', oppVal: scores.P }
+        ];
+
+        const dimsHtml = dims.map(d => {
+            const pct = d.total > 0 ? Math.round(d.val / d.total * 100) : 50;
+            return `
+                <div class="mbti-dimension">
+                    <div class="dim-label">
+                        <span>${d.label} ${pct}%</span>
+                        <span>${d.oppLabel} ${100-pct}%</span>
+                    </div>
+                    <div class="dim-bar">
+                        <div class="dim-fill" style="width:${pct}%;background:${d.color};"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const traitsHtml = info.traits.map(t =>
+            `<span class="badge badge-info">${t}</span>`
+        ).join('');
+
+        document.getElementById('mbti-quiz-card').classList.add('hidden');
+        const resultCard = document.getElementById('mbti-result-card');
+        resultCard.classList.remove('hidden');
+        resultCard.innerHTML = `
+            <div class="mbti-result">
+                <div style="font-size:14px;color:var(--text-light);">你的性格类型是</div>
+                <div class="mbti-type">${type}</div>
+                <div class="mbti-type-name">${info.name}</div>
+                <div class="mbti-traits">${traitsHtml}</div>
+                <div class="mbti-type-desc">${info.desc}</div>
+                <div style="max-width:500px;margin:24px auto 0;">
+                    <div class="card-title" style="text-align:left;">📊 维度分析</div>
+                    ${dimsHtml}
+                </div>
+                <div style="margin-top:28px;display:flex;gap:12px;justify-content:center;">
+                    <button class="btn btn-primary" onclick="startMBTI()">重新测试</button>
+                    <button class="btn btn-outline" onclick="navigate('dashboard')">返回首页</button>
+                </div>
+            </div>
+        `;
+    }
+
+    /* ============================================================
+       热搜速览模块
+    ============================================================ */
+    const HOT_PLATFORMS = [
+        { id: 'weibo',      name: '微博',     color: '#ff4757', icon: '📢' },
+        { id: 'zhihu',      name: '知乎',     color: '#0084ff', icon: '💡' },
+        { id: 'baidu',      name: '百度',     color: '#2932e1', icon: '🔍' },
+        { id: 'bilibili',   name: '哔哩哔哩', color: '#fb7299', icon: '📺' },
+        { id: 'douyin',     name: '抖音',     color: '#333333', icon: '🎵' },
+        { id: 'toutiao',    name: '今日头条', color: '#ff0000', icon: '📰' },
+        { id: 'ithome',     name: 'IT之家',   color: '#e83828', icon: '💻' },
+        { id: 'thepaper',   name: '澎湃新闻', color: '#ff6651', icon: '📰' },
+        { id: 'hupu',       name: '虎扑',     color: '#ff3b30', icon: '🏀' },
+        { id: 'tieba',      name: '百度贴吧', color: '#4e6ef2', icon: '💬' },
+        { id: 'sspai',      name: '少数派',   color: '#d33a31', icon: '✨' },
+        { id: 'github',     name: 'GitHub',   color: '#333333', icon: '🐙' },
+    ];
+
+    let currentPlatform = 'weibo';
+    let hotDataCache = {};
+    let hotDataLoading = false;
+
+    function renderHotPlatforms() {
+        const html = HOT_PLATFORMS.map(p => `
+            <button class="platform-btn ${p.id === currentPlatform ? 'active' : ''}"
+                    onclick="selectPlatform('${p.id}')"
+                    style="${p.id === currentPlatform ? '' : `border-color:${p.color}33;`}">
+                <span class="dot" style="background:${p.color};"></span>
+                ${p.icon} ${p.name}
+            </button>
+        `).join('');
+        document.getElementById('hot-platforms').innerHTML = html;
+    }
+
+    function selectPlatform(id) {
+        currentPlatform = id;
+        renderHotPlatforms();
+        document.getElementById('hot-filter').value = '';
+        if (hotDataCache[id] && hotDataCache[id].length > 0) {
+            renderHotList();
+        } else {
+            loadHotSearch();
+        }
+    }
+
+    async function loadHotSearch(force = false) {
+        if (hotDataLoading) return;
+        hotDataLoading = true;
+
+        document.getElementById('hot-content').innerHTML = `
+            <div class="hot-loading">
+                <div class="spinner"></div>
+                <p>正在获取${HOT_PLATFORMS.find(p => p.id === currentPlatform)?.name || ''}热搜...</p>
+            </div>
+        `;
+
+        try {
+            const url = `https://newshub.shenzjd.com/api/v1/batch?sources=${currentPlatform}&limit=30${force ? '&force=1' : ''}`;
+            const res = await fetch(url);
+            const json = await res.json();
+
+            const result = json.results?.find(r => r.id === currentPlatform);
+            if (result && result.success && result.data) {
+                hotDataCache[currentPlatform] = result.data;
+                const now = new Date();
+                document.getElementById('hot-update-time').textContent =
+                    `更新于 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+                renderHotList();
+            } else {
+                hotDataCache[currentPlatform] = [];
+                renderHotList();
+            }
+        } catch (err) {
+            document.getElementById('hot-content').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">⚠️</div>
+                    <p>获取热搜失败，请检查网络后重试</p>
+                    <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="loadHotSearch(true)">重新加载</button>
+                </div>
+            `;
+        }
+        hotDataLoading = false;
+    }
+
+    function renderHotList() {
+        const data = hotDataCache[currentPlatform] || [];
+        const filter = document.getElementById('hot-filter').value.trim().toLowerCase();
+
+        let filtered = data;
+        if (filter) {
+            filtered = data.filter(item =>
+                (item.title || '').toLowerCase().includes(filter)
+            );
+        }
+
+        if (filtered.length === 0) {
+            document.getElementById('hot-content').innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <p>${filter ? '没有匹配的热搜内容' : '暂无热搜数据，点击刷新重试'}</p>
+                </div>
+            `;
+            return;
+        }
+
+        const platform = HOT_PLATFORMS.find(p => p.id === currentPlatform);
+        const html = filtered.map((item, idx) => {
+            const rank = item.extra?.rank || item.rank || (idx + 1);
+            const rankClass = rank <= 1 ? 'top1' : rank === 2 ? 'top2' : rank === 3 ? 'top3' : '';
+            const info = item.extra?.info || (item.score ? `${item.score} 热度` : '');
+            const title = item.title || '';
+            const url = item.url || '#';
+            const tag = detectHotTag(title);
+
+            return `
+                <a class="hot-item" href="${url}" target="_blank" rel="noopener">
+                    <div class="hot-rank ${rankClass}">${rank}</div>
+                    ${tag ? `<span class="hot-tag ${tag.cls}">${tag.label}</span>` : ''}
+                    <div class="hot-title">${escapeHtml(title)}</div>
+                    ${info ? `<div class="hot-info">${escapeHtml(info)}</div>` : ''}
+                    <span style="color:var(--text-muted);font-size:14px;flex-shrink:0;">↗</span>
+                </a>
+            `;
+        }).join('');
+
+        document.getElementById('hot-content').innerHTML = `
+            <div class="hot-stats">
+                <span>📊 共 ${data.length} 条热搜${filter ? ` · 筛选出 ${filtered.length} 条` : ''}</span>
+                <span style="color:${platform?.color || 'var(--primary)'};">● ${platform?.name || ''}</span>
+            </div>
+            <div class="hot-list">${html}</div>
+        `;
+    }
+
+    function detectHotTag(title) {
+        if (!title) return null;
+        if (title.includes('热') || title.includes('爆')) return { label: '热', cls: 'hot' };
+        if (title.includes('新')) return { label: '新', cls: 'new' };
+        if (title.includes('沸')) return { label: '沸', cls: 'boil' };
+        return null;
+    }
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    /* ============================================================
+       仪表盘
+    ============================================================ */
+    function renderDashboard() {
+        // 记账统计
+        const accounts = Store.get('accounts');
+        const now = new Date();
+        const monthStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const monthAcc = accounts.filter(a => a.date.startsWith(monthStr));
+        const income = monthAcc.filter(a => a.type === 'income').reduce((s, a) => s + a.amount, 0);
+        const expense = monthAcc.filter(a => a.type === 'expense').reduce((s, a) => s + a.amount, 0);
+        document.getElementById('dash-balance').textContent = `¥${(income - expense).toFixed(0)}`;
+
+        // 过期管理统计
+        const items = Store.get('expiryItems');
+        const expiring = items.filter(i => {
+            const d = daysBetween(i.date);
+            return d >= 0 && d <= 7;
+        }).length;
+        document.getElementById('dash-expiring').textContent = expiring;
+
+        // 任务统计
+        const tasks = Store.get('tasks');
+        document.getElementById('dash-tasks').textContent = tasks.filter(t => !t.done).length;
+
+        // 番茄钟统计
+        const daily = Store.get('dailyPomodoros', {});
+        document.getElementById('dash-pomodoros').textContent = daily[new Date().toDateString()] || 0;
+
+        // 收支图表 - 本月每日
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+        const today = now.getDate();
+        let chartHtml = '';
+        const maxAmount = Math.max(1, ...Array.from({length: today}, (_, i) => {
+            const d = `${monthStr}-${String(i+1).padStart(2,'0')}`;
+            return monthAcc.filter(a => a.date === d).reduce((s, a) => s + (a.type === 'expense' ? a.amount : 0), 0);
+        }));
+        for (let i = 1; i <= today; i++) {
+            const d = `${monthStr}-${String(i).padStart(2,'0')}`;
+            const dayExp = monthAcc.filter(a => a.date === d && a.type === 'expense').reduce((s, a) => s + a.amount, 0);
+            const dayInc = monthAcc.filter(a => a.date === d && a.type === 'income').reduce((s, a) => s + a.amount, 0);
+            const h = Math.max(2, (dayExp / maxAmount) * 160);
+            const hInc = Math.max(2, (dayInc / maxAmount) * 160);
+            chartHtml += `<div style="text-align:center;flex:1;">
+                <div style="display:flex;flex-direction:column;justify-content:flex-end;height:160px;gap:1px;">
+                    <div style="height:${hInc}px;background:var(--success);border-radius:2px 2px 0 0;min-height:2px;" title="收入¥${dayInc.toFixed(0)}"></div>
+                    <div style="height:${h}px;background:var(--danger);border-radius:0 0 2px 2px;min-height:2px;" title="支出¥${dayExp.toFixed(0)}"></div>
+                </div>
+                <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${i}</div>
+            </div>`;
+        }
+        document.getElementById('dash-chart').innerHTML = chartHtml || '<div class="empty-state" style="width:100%;"><p>暂无数据</p></div>';
+
+        // 提醒
+        let alerts = '';
+        if (expiring > 0) alerts += `<p style="padding:8px 0;color:var(--warning);">⚠️ 有 ${expiring} 件物品即将过期，请尽快使用</p>`;
+        const expired = items.filter(i => daysBetween(i.date) < 0).length;
+        if (expired > 0) alerts += `<p style="padding:8px 0;color:var(--danger);">🔴 有 ${expired} 件物品已过期，请及时处理</p>`;
+        const undoneTasks = tasks.filter(t => !t.done).length;
+        if (undoneTasks > 0) alerts += `<p style="padding:8px 0;color:var(--info);">📝 你还有 ${undoneTasks} 个待办任务</p>`;
+        if (!alerts) alerts = '<p style="padding:8px 0;color:var(--success);">✅ 一切正常，继续保持！</p>';
+        document.getElementById('dash-alerts').innerHTML = alerts;
+    }
+
+    /* ============================================================
+       初始化
+    ============================================================ */
+    document.getElementById('acc-date').value = todayStr();
+    document.getElementById('exp-date').value = todayStr();
+    updateAccCategories();
+    renderDashboard();
+    renderAccounts();
+    renderExpiry();
+    renderTasks();
+    updateTimerDisplay();
+
+    // 今日番茄钟计数
+    const daily = Store.get('dailyPomodoros', {});
+    document.getElementById('pomo-count').textContent = daily[new Date().toDateString()] || 0;
+
+    // 默认加载天气（自动恢复上次位置或定位）
+    initWeather();
+
+    // 预渲染热搜平台按钮
+    renderHotPlatforms();
+
+    // 检查登录状态（必须最后执行，控制页面访问权限）
+    checkAuth();
+    </script>
+</body>
+</html>
