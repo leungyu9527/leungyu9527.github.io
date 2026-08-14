@@ -1531,20 +1531,25 @@
                         <button class="btn btn-outline btn-sm" onclick="clearAllAccounts()">清空</button>
                     </div>
                 </div>
-                <div style="overflow-x:auto;">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>日期</th>
-                                <th>类型</th>
-                                <th>分类</th>
-                                <th>金额</th>
-                                <th>备注</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="acc-list"></tbody>
-                    </table>
+                <div class="grid grid-2">
+                    <div>
+                        <h4 style="margin-bottom:8px;color:var(--danger);">💸 支出 <span id="acc-expense-total" style="font-size:13px;font-weight:400;"></span></h4>
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead><tr><th>日期</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr></thead>
+                                <tbody id="acc-list-expense"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="margin-bottom:8px;color:var(--success);">💰 收入 <span id="acc-income-total" style="font-size:13px;font-weight:400;"></span></h4>
+                        <div style="overflow-x:auto;">
+                            <table>
+                                <thead><tr><th>日期</th><th>分类</th><th>金额</th><th>备注</th><th>操作</th></tr></thead>
+                                <tbody id="acc-list-income"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2048,20 +2053,26 @@
         `).join('');
         document.getElementById('acc-category-stats').innerHTML = catHtml || '<div class="empty-state"><p>暂无数据</p></div>';
 
-        // 列表
-        const listHtml = filtered.length ? filtered.map(a => `
+        // 分列：支出 / 收入
+        const expenseList = filtered.filter(a => a.type === 'expense');
+        const incomeList = filtered.filter(a => a.type === 'income');
+        document.getElementById('acc-expense-total').textContent = `合计 ¥${expense.toFixed(2)}`;
+        document.getElementById('acc-income-total').textContent = `合计 ¥${income.toFixed(2)}`;
+
+        const buildListHtml = (list, isIncome) => list.length ? list.map(a => `
             <tr>
                 <td>${a.date}</td>
-                <td><span class="badge ${a.type === 'income' ? 'badge-income' : 'badge-expense'}">${a.type === 'income' ? '收入' : '支出'}</span></td>
                 <td>${a.category}</td>
-                <td style="font-weight:600;color:${a.type === 'income' ? 'var(--success)' : 'var(--danger)'};">
-                    ${a.type === 'income' ? '+' : '-'}¥${a.amount.toFixed(2)}
+                <td style="font-weight:600;color:${isIncome ? 'var(--success)' : 'var(--danger)'};">
+                    ${isIncome ? '+' : '-'}¥${a.amount.toFixed(2)}
                 </td>
                 <td>${a.note || '-'}</td>
                 <td><button class="btn btn-danger btn-sm" onclick="deleteAccount(${a.id})">删除</button></td>
             </tr>
-        `).join('') : '<tr><td colspan="6"><div class="empty-state"><div class="icon">💰</div><p>暂无记录，开始记账吧！</p></div></td></tr>';
-        document.getElementById('acc-list').innerHTML = listHtml;
+        `).join('') : `<tr><td colspan="5"><div class="empty-state" style="padding:16px;"><p>暂无${isIncome ? '收入' : '支出'}记录</p></div></td></tr>`;
+
+        document.getElementById('acc-list-expense').innerHTML = buildListHtml(expenseList, false);
+        document.getElementById('acc-list-income').innerHTML = buildListHtml(incomeList, true);
     }
 
     /* ============================================================
