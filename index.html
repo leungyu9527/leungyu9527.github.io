@@ -644,25 +644,18 @@
         }
         @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 
-        .hourly-timeline {
-            display: flex;
+        .hourly-chart-wrap {
             overflow-x: auto;
-            gap: 8px;
-            padding-bottom: 8px;
             margin-top: 12px;
+            padding-bottom: 6px;
         }
-        .hourly-item {
-            flex: 0 0 70px;
+        .hourly-chart-wrap svg { display: block; }
+        .hourly-chart-wrap .chart-tip {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
             text-align: center;
-            padding: 10px 4px;
-            border-radius: 10px;
-            background: var(--bg);
-            transition: background 0.2s;
         }
-        .hourly-item:hover { background: var(--border); }
-        .hourly-item .hour { font-size: 11px; color: var(--text-light); }
-        .hourly-item .hour-icon { font-size: 22px; margin: 4px 0; }
-        .hourly-item .hour-temp { font-size: 14px; font-weight: 600; }
 
         .daily-detail-grid {
             display: grid;
@@ -2594,24 +2587,81 @@
         const hourIndices = [];
         if (hourly && hourly.time) {
             hourly.time.forEach((t, i) => {
-                if (t.startsWith(dayDate)) {
-                    const h = new Date(t).getHours();
-                    if (h % 3 === 0) hourIndices.push(i);
-                }
+                if (t.startsWith(dayDate)) hourIndices.push(i);
             });
         }
 
-        const hourlyHtml = hourIndices.map(i => {
-            const hw = WEATHER_CODES[hourly.weather_code[i]] || { desc: '', icon: '🌡️' };
-            const h = new Date(hourly.time[i]).getHours();
-            const pop = (hourly.precipitation_probability && hourly.precipitation_probability[i] != null) ? hourly.precipitation_probability[i] : 0;
-            return `<div class="hourly-item">
-                <div class="hour">${String(h).padStart(2,'0')}:00</div>
-                <div class="hour-icon">${hw.icon}</div>
-                <div class="hour-temp">${Math.round(hourly.temperature_2m[i])}°</div>
-                <div style="font-size:10px;color:var(--text-muted);">💧${pop}%</div>
+        // Build SVG temperature curve chart
+        const temps = hourIndices.map(i => hourly.temperature_2m[i]);
+        const minT = Math.min(...temps);
+        const maxT = Math.max(...temps);
+        const range = Math.max(maxT - minT, 5);
+        const padT = range * 0.2;
+        const yMin = minT - padT;
+        const yMax = maxT + padT;
+
+        const W = hourIndices.length * 45 + 30;
+        const H = 180;
+        const padL = 15, padR = 15, padTop = 30, padBot = 35;
+        const chartW = W - padL - padR;
+        const chartH = H - padTop - padBot;
+
+        const xOf = i => padL + (chartW / Math.max(hourIndices.length - 1, 1)) * i;
+        const yOf = t => padTop + chartH - ((t - yMin) / (yMax - yMin)) * chartH;
+
+        const pts = hourIndices.map((hi, i) => {
+            const t = hourly.temperature_2m[hi];
+            return `${xOf(i)},${yOf(t)}`;
+        });
+
+        // Smooth curve path
+        let pathD = '';
+        if (pts.length > 0) {
+            pathD = `M ${pts[0]}`;
+            for (let i = 1; i < pts.length; i++) {
+                const [px, py] = pts[i-1].split(',').map(Number);
+                const [cx, cy] = pts[i].split(',').map(Number);
+                const mx = (px + cx) / 2;
+                pathD += ` Q ${px},${py} ${mx},${(py+cy)/2} T ${cx},${cy}`;
+            }
+        }
+        const areaD = pathD ? `${pathD} L ${xOf(pts.length-1)},${padTop+chartH} L ${xOf(0)},${padTop+chartH} Z` : '';
+
+        // Dots + labels every 2h, hour labels every 3h, icons every 6h
+        let dotsXml = '';
+        hourIndices.forEach((hi, i) => {
+            const t = hourly.temperature_2m[hi];
+            const x = xOf(i), y = yOf(t);
+            const h = new Date(hourly.time[hi]).getHours();
+            const hw = WEATHER_CODES[hourly.weather_code[hi]] || { icon: '🌡️' };
+
+            if (i % 2 === 0) {
+                dotsXml += `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text)">${Math.round(t)}°</text>`;
+            }
+            dotsXml += `<circle cx="${x}" cy="${y}" r="2.5" fill="var(--primary)"/>`;
+            if (i % 3 === 0) {
+                dotsXml += `<text x="${x}" y="${H - 18}" text-anchor="middle" font-size="10" fill="var(--text-muted)">${String(h).padStart(2,'0')}:00</text>`;
+            }
+            if (h % 6 === 0) {
+                dotsXml += `<text x="${x}" y="${H - 4}" text-anchor="middle" font-size="14">${hw.icon}</text>`;
+            }
+        });
+
+        const hourlyChart = `
+            <div class="hourly-chart-wrap">
+                <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="tempGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.25"/>
+                            <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="${areaD}" fill="url(#tempGrad)"/>
+                    <path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    ${dotsXml}
+                </svg>
+                <div class="chart-tip">⬅️ 左右滑动查看 24 小时温度变化曲线</div>
             </div>`;
-        }).join('');
 
         const dw = WEATHER_CODES[daily.weather_code[idx]] || { desc: '未知', icon: '🌡️' };
         const sr = new Date(daily.sunrise[idx]);
@@ -2633,8 +2683,8 @@
                     <div class="daily-detail-item"><div class="dd-icon">🌅</div><div class="dd-label">日出</div><div class="dd-value">${fmtTime(sr)}</div></div>
                     <div class="daily-detail-item"><div class="dd-icon">🌇</div><div class="dd-label">日落</div><div class="dd-value">${fmtTime(ss)}</div></div>
                 </div>
-                <h4 style="margin-bottom:8px;font-size:14px;">⏰ 24小时变化趋势</h4>
-                <div class="hourly-timeline">${hourlyHtml}</div>
+                <h4 style="margin-bottom:8px;font-size:14px;">⏰ 24小时温度变化曲线</h4>
+                ${hourlyChart}
             </div>
         `;
     }
