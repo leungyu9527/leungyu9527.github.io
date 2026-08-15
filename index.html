@@ -656,6 +656,32 @@
             margin-top: 4px;
             text-align: center;
         }
+        .hourly-node-hit { cursor: pointer; }
+        .hourly-node-hit:hover circle.hit-bg { fill-opacity: 0.15; }
+        .hour-detail-popup {
+            margin-top: 12px;
+            padding: 16px;
+            border-radius: var(--radius);
+            background: var(--bg);
+            border-left: 3px solid var(--primary);
+            animation: fadeIn 0.25s ease;
+        }
+        .hour-detail-popup .hd-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .hour-detail-popup .hd-item { text-align:center; }
+        .hour-detail-popup .hd-item .hd-icon { font-size:18px; }
+        .hour-detail-popup .hd-item .hd-label { font-size:10px; color:var(--text-light); }
+        .hour-detail-popup .hd-item .hd-value { font-size:13px; font-weight:500; }
+        @media (max-width: 768px) {
+            .hour-detail-popup .hd-grid { grid-template-columns: repeat(3,1fr); }
+        }
+        @media (max-width: 480px) {
+            .hour-detail-popup .hd-grid { grid-template-columns: repeat(2,1fr); }
+        }
 
         .daily-detail-grid {
             display: grid;
@@ -2627,7 +2653,17 @@
         }
         const areaD = pathD ? `${pathD} L ${xOf(pts.length-1)},${padTop+chartH} L ${xOf(0)},${padTop+chartH} Z` : '';
 
-        // Dots + labels every 2h, hour labels every 3h, icons every 6h
+        // Store hour data for click interaction
+        weatherCache.curHourData = hourIndices.map((hi, i) => ({
+            hour: new Date(hourly.time[hi]).getHours(),
+            time: hourly.time[hi],
+            temp: hourly.temperature_2m[hi],
+            weatherCode: hourly.weather_code[hi],
+            humidity: hourly.relative_humidity_2m ? hourly.relative_humidity_2m[hi] : null,
+            pop: hourly.precipitation_probability ? hourly.precipitation_probability[hi] : null
+        }));
+
+        // Dots + labels every 2h, hour labels every 3h, icons every 6h — clickable
         let dotsXml = '';
         hourIndices.forEach((hi, i) => {
             const t = hourly.temperature_2m[hi];
@@ -2638,7 +2674,10 @@
             if (i % 2 === 0) {
                 dotsXml += `<text x="${x}" y="${y - 8}" text-anchor="middle" font-size="12" font-weight="600" fill="var(--text)">${Math.round(t)}°</text>`;
             }
-            dotsXml += `<circle cx="${x}" cy="${y}" r="2.5" fill="var(--primary)"/>`;
+            dotsXml += `<g class="hourly-node-hit" onclick="showHourDetail(${i})">
+                <circle class="hit-bg" cx="${x}" cy="${y}" r="12" fill="var(--primary)" fill-opacity="0"/>
+                <circle cx="${x}" cy="${y}" r="3.5" fill="var(--primary)" stroke="var(--card-bg)" stroke-width="1.5"/>
+            </g>`;
             if (i % 3 === 0) {
                 dotsXml += `<text x="${x}" y="${H - 18}" text-anchor="middle" font-size="10" fill="var(--text-muted)">${String(h).padStart(2,'0')}:00</text>`;
             }
@@ -2660,8 +2699,9 @@
                     <path d="${pathD}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
                     ${dotsXml}
                 </svg>
-                <div class="chart-tip">⬅️ 左右滑动查看 24 小时温度变化曲线</div>
-            </div>`;
+                <div class="chart-tip">⬅️ 左右滑动查看 · 点击曲线节点查看小时详情</div>
+            </div>
+            <div id="hour-detail-popup"></div>`;
 
         const dw = WEATHER_CODES[daily.weather_code[idx]] || { desc: '未知', icon: '🌡️' };
         const sr = new Date(daily.sunrise[idx]);
@@ -2685,6 +2725,30 @@
                 </div>
                 <h4 style="margin-bottom:8px;font-size:14px;">⏰ 24小时温度变化曲线</h4>
                 ${hourlyChart}
+            </div>
+        `;
+    }
+
+    function showHourDetail(i) {
+        if (!weatherCache || !weatherCache.curHourData || !weatherCache.curHourData[i]) return;
+        const d = weatherCache.curHourData[i];
+        const hw = WEATHER_CODES[d.weatherCode] || { desc: '未知', icon: '🌡️' };
+        const popup = document.getElementById('hour-detail-popup');
+        if (!popup) return;
+        popup.innerHTML = `
+            <div class="hour-detail-popup">
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:20px;">${hw.icon}</span>
+                    <span style="font-weight:600;font-size:15px;">${String(d.hour).padStart(2,'0')}:00</span>
+                    <span style="color:var(--text-muted);font-size:13px;">${hw.desc}</span>
+                    <span style="margin-left:auto;font-size:20px;font-weight:700;color:var(--primary);">${Math.round(d.temp)}°C</span>
+                </div>
+                <div class="hd-grid">
+                    <div class="hd-item"><div class="hd-icon">🌡️</div><div class="hd-label">体感温度</div><div class="hd-value">${Math.round(d.temp)}°C</div></div>
+                    <div class="hd-item"><div class="hd-icon">💧</div><div class="hd-label">湿度</div><div class="hd-value">${d.humidity != null ? d.humidity + '%' : 'N/A'}</div></div>
+                    <div class="hd-item"><div class="hd-icon">🌧️</div><div class="hd-label">降水概率</div><div class="hd-value">${d.pop != null ? d.pop + '%' : 'N/A'}</div></div>
+                    <div class="hd-item"><div class="hd-icon">${hw.icon}</div><div class="hd-label">天气</div><div class="hd-value">${hw.desc}</div></div>
+                </div>
             </div>
         `;
     }
